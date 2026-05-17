@@ -1,0 +1,32 @@
+{
+  "dashboard": {
+    "title": "MLOps Energy Forecast",
+    "panels": [
+      {
+        "title": "API Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"fastapi\"}",
+            "legendFormat": "API Up"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "title": "Prediction Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(prediction_latency_seconds_sum[5m]) / rate(prediction_latency_seconds_count[5m])",
+            "legendFormat": "Latency"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      }
+    ],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1
+  }
+}
