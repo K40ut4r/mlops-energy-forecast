@@ -1,5 +1,7 @@
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.10.3-python3.12
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.airflow
   environment:
     - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
     - AIRFLOW__CORE__LOAD_EXAMPLES=False
@@ -11,10 +13,9 @@ x-airflow-common: &airflow-common
     - ..:/opt/airflow/project
 
 services:
-
-  # ─────────────────────────────────────────
+  # -----------------------------------------
   # API FastAPI
-  # ─────────────────────────────────────────
+  # -----------------------------------------
   api:
     build:
       context: ..
@@ -27,30 +28,29 @@ services:
       - PYTHONPATH=/app
     restart: unless-stopped
 
-  # ─────────────────────────────────────────
+  # -----------------------------------------
   # MLflow
-  # ─────────────────────────────────────────
+  # -----------------------------------------
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
     ports:
       - "5000:5000"
     volumes:
       - ../mlruns:/mlruns
-      - ../mlflow.db:/mlflow.db
-    command: mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow.db
+    command: mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlruns/mlflow.db
     restart: unless-stopped
 
-  # ─────────────────────────────────────────
-  # Airflow — Init (runs once then exits)
-  # ─────────────────────────────────────────
+  # -----------------------------------------
+  # Airflow - Init (runs once then exits)
+  # -----------------------------------------
   airflow-init:
     <<: *airflow-common
     command: bash -c "airflow db migrate && airflow users create --username kawme --password kawme178 --firstname Kaoutar --lastname Mez --role Admin --email kmezouahi@gmail.com"
     restart: "no"
 
-  # ─────────────────────────────────────────
-  # Airflow — Webserver
-  # ─────────────────────────────────────────
+  # -----------------------------------------
+  # Airflow - Webserver
+  # -----------------------------------------
   airflow-webserver:
     <<: *airflow-common
     ports:
@@ -58,9 +58,9 @@ services:
     command: airflow webserver
     restart: unless-stopped
 
-  # ─────────────────────────────────────────
-  # Airflow — Scheduler
-  # ─────────────────────────────────────────
+  # -----------------------------------------
+  # Airflow - Scheduler
+  # -----------------------------------------
   airflow-scheduler:
     <<: *airflow-common
     command: airflow scheduler
