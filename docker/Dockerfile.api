@@ -2,9 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copier les dépendances
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copier les dépendances LÉGÈRES (pas requirements.txt complet)
+COPY docker/requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
 
 # Copier le projet
 COPY src/ ./src/
