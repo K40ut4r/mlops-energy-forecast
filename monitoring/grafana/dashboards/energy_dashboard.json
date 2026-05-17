@@ -1,0 +1,17 @@
+{
+  "dashboard": {
+    "title": "Energy Forecast Monitoring",
+    "panels": [
+      {
+        "title": "API Latency",
+        "type": "graph",
+        "targets": [{"expr": "api_request_duration_seconds"}]
+      },
+      {
+        "title": "Prediction Count",
+        "type": "singlestat",
+        "targets": [{"expr": "predictions_total"}]
+      }
+    ]
+  }
+}

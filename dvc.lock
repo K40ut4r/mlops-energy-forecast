@@ -1,0 +1,94 @@
+schema: '2.0'
+stages:
+  load_data:
+    cmd: python src/data/ingestion.py
+    deps:
+    - path: data/raw/household_power_consumption.txt
+      hash: md5
+      md5: e05286cd4a257d80c3f0407b350df7dd
+      size: 132960755
+    - path: src/data/ingestion.py
+      hash: md5
+      md5: e9a9dd4ad116396d32ce86870aab1600
+      size: 4333
+    outs:
+    - path: data/processed/raw_loaded.parquet
+      hash: md5
+      md5: fe0e941e18be723a4f62a27308d38114
+      size: 25065966
+  clean_data:
+    cmd: python src/data/cleaning.py
+    deps:
+    - path: data/processed/raw_loaded.parquet
+      hash: md5
+      md5: fe0e941e18be723a4f62a27308d38114
+      size: 25065966
+    - path: src/data/cleaning.py
+      hash: md5
+      md5: d52c6adfc1ee2febe2c3a0b4c969c47f
+      size: 7047
+    outs:
+    - path: data/processed/cleaned_data.parquet
+      hash: md5
+      md5: 340a20ff9ef8a60cbc73f0d1d169a0b8
+      size: 33013701
+  build_features:
+    cmd: python src/features/build_features.py
+    deps:
+    - path: data/processed/cleaned_data.parquet
+      hash: md5
+      md5: 340a20ff9ef8a60cbc73f0d1d169a0b8
+      size: 33013701
+    - path: src/features/build_features.py
+      hash: md5
+      md5: 59a1b90fd5d31b9c3037101e28630300
+      size: 10993
+    outs:
+    - path: data/featured/features.parquet
+      hash: md5
+      md5: 3ba5824e7bfe110757a487b526fc3d69
+      size: 5263013
+  train_model:
+    cmd: python src/models/train.py
+    deps:
+    - path: configs/model_config.yaml
+      hash: md5
+      md5: 298abf70ba1d1eaa2a0fd3dc3c79db91
+      size: 754
+    - path: data/featured/features.parquet
+      hash: md5
+      md5: 3ba5824e7bfe110757a487b526fc3d69
+      size: 5263013
+    - path: src/models/train.py
+      hash: md5
+      md5: 184ee79e8253193aeb73ef65d7369a6d
+      size: 7924
+    outs:
+    - path: metrics/train_metrics.json
+      hash: md5
+      md5: dd1cc4c53515648bae88cb67ba8b103c
+      size: 81
+    - path: models/model.pkl
+      hash: md5
+      md5: 7e34c095e0bc51b8b589642ad25a7d37
+      size: 464949
+  evaluate_model:
+    cmd: python src/models/evaluate.py
+    deps:
+    - path: data/featured/features.parquet
+      hash: md5
+      md5: 3ba5824e7bfe110757a487b526fc3d69
+      size: 5263013
+    - path: models/model.pkl
+      hash: md5
+      md5: 7e34c095e0bc51b8b589642ad25a7d37
+      size: 464949
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: 110c4c31c5d9f39e77d58dc855ec80b1
+      size: 4714
+    outs:
+    - path: metrics/test_metrics.json
+      hash: md5
+      md5: 500ad25f3aab86c73f96bd634b414a50
+      size: 126
