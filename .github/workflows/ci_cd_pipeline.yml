@@ -37,34 +37,48 @@ jobs:
   # ─────────────────────────────────────────
   # 2. Build Docker (dépend de test)
   # ─────────────────────────────────────────
-  build-docker:
-    needs: test        # ← ne tourne que si "test" passe
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'   # ← uniquement sur la branche main
-    steps:
-      - uses: actions/checkout@v4
+    build-docker:
+      needs: test
+      runs-on: ubuntu-latest
+      if: github.ref == 'refs/heads/main'
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Create dummy model for Docker build
-        run: |
-          mkdir -p models
-          python -c "
-          import pickle
-          class DummyModel:
-              def __init__(self):
-                  self.feature_names_in_ = ['hour_sin','hour_cos','lag_1h','lag_24h']
-              def predict(self, X):
-                  return [1.5] * len(X)
-          with open('models/model.pkl', 'wb') as f:
-              pickle.dump({'model': DummyModel(), 'feature_names': ['hour_sin','hour_cos','lag_1h','lag_24h']}, f)
-          "
+        - name: Create dummy model for Docker build
+          run: |
+            mkdir -p models
+            python -c "
+            import pickle
+            class DummyModel:
+                def __init__(self):
+                    self.feature_names_in_ = ['hour_sin','hour_cos','lag_1h','lag_24h']
+                def predict(self, X):
+                    return [1.5] * len(X)
+            with open('models/model.pkl', 'wb') as f:
+                pickle.dump({'model': DummyModel(), 'feature_names': ['hour_sin','hour_cos','lag_1h','lag_24h']}, f)
+            "
 
-      - name: Build API Docker image
-        run: |
-          docker build -f docker/Dockerfile.api -t energy-forecast-api:latest .
+        - name: Build API Docker image
+          run: |
+            docker build -f docker/Dockerfile.api -t energy-forecast-api:latest .
 
-      - name: Test API container
-        run: |
-          docker run -d -p 8000:8000 --name test-api energy-forecast-api:latest
-          sleep 10
-          curl -f http://localhost:8000/health || exit 1
-          docker stop test-api
+        - name: Test API container
+          run: |
+            docker run -d -p 8000:8000 --name test-api energy-forecast-api:latest
+            
+            # Attendre que l'API démarre (max 60s)
+            for i in {1..30}; do
+              echo "Attempt $i/30..."
+              sleep 2
+              if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                echo "✅ API is ready!"
+                curl http://localhost:8000/health
+                docker stop test-api
+                exit 0
+              fi
+            done
+            
+            echo "❌ API failed to start"
+            docker logs test-api
+            docker stop test-api
+            exit 1
