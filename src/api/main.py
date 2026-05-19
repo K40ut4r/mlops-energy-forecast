@@ -28,7 +28,9 @@ if MODEL_PATH.exists():
         model = pickle.load(f)
     print(f"✅ Modèle chargé depuis {MODEL_PATH}")
 else:
-    print(f"⚠️ Modèle non trouvé à {MODEL_PATH}. L'API tourne mais /predict renverra une erreur.")
+    print(
+        f"⚠️ Modèle non trouvé à {MODEL_PATH}. L'API tourne mais /predict renverra une erreur."
+    )
 
 
 # ─────────────────────────────────────────
@@ -36,11 +38,15 @@ else:
 # ─────────────────────────────────────────
 class PredictionRequest(BaseModel):
     """Requête de prédiction."""
-    features: Dict[str, float]  # ex: {"Global_active_power": 2.5, "Voltage": 240.0, ...}
+
+    features: Dict[
+        str, float
+    ]  # ex: {"Global_active_power": 2.5, "Voltage": 240.0, ...}
 
 
 class PredictionResponse(BaseModel):
     """Réponse de prédiction."""
+
     prediction: float
     unit: str = "kW"
     horizon: str = "1h"
@@ -48,6 +54,7 @@ class PredictionResponse(BaseModel):
 
 class BatchPredictionRequest(BaseModel):
     """Requête de prédiction en batch."""
+
     items: List[Dict[str, float]]
 
 
@@ -118,9 +125,12 @@ def predict_batch(request: BatchPredictionRequest):
             "count": len(predictions),
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erreur de prédiction batch: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Erreur de prédiction batch: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

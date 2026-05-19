@@ -1,6 +1,7 @@
 """
 Module d'entraînement du modèle XGBoost pour la prédiction de consommation électrique.
 """
+
 import json
 import os
 import pickle
@@ -79,10 +80,12 @@ def save_artifacts(model, metrics, X_train):
 
     # Feature importance CSV
     if hasattr(model, "feature_importances_"):
-        importance = pd.DataFrame({
-            "feature": X_train.columns,
-            "importance": model.feature_importances_,
-        }).sort_values("importance", ascending=False)
+        importance = pd.DataFrame(
+            {
+                "feature": X_train.columns,
+                "importance": model.feature_importances_,
+            }
+        ).sort_values("importance", ascending=False)
         importance.to_csv(MODELS_DIR / "feature_importance.csv", index=False)
 
     return model_path
@@ -98,13 +101,15 @@ def run_mlflow_experiment(model, metrics, X_train, y_train, X_test, y_test):
 
         with mlflow.start_run():
             # Log params
-            mlflow.log_params({
-                "n_estimators": 100,
-                "max_depth": 6,
-                "learning_rate": 0.1,
-                "subsample": 0.8,
-                "colsample_bytree": 0.8,
-            })
+            mlflow.log_params(
+                {
+                    "n_estimators": 100,
+                    "max_depth": 6,
+                    "learning_rate": 0.1,
+                    "subsample": 0.8,
+                    "colsample_bytree": 0.8,
+                }
+            )
 
             # Log metrics
             mlflow.log_metrics(metrics)
@@ -114,10 +119,12 @@ def run_mlflow_experiment(model, metrics, X_train, y_train, X_test, y_test):
 
             # Log feature importance
             if hasattr(model, "feature_importances_"):
-                importance_df = pd.DataFrame({
-                    "feature": X_train.columns,
-                    "importance": model.feature_importances_,
-                })
+                importance_df = pd.DataFrame(
+                    {
+                        "feature": X_train.columns,
+                        "importance": model.feature_importances_,
+                    }
+                )
                 importance_path = MODELS_DIR / "feature_importance.csv"
                 importance_df.to_csv(importance_path, index=False)
                 mlflow.log_artifact(str(importance_path))
@@ -127,7 +134,9 @@ def run_mlflow_experiment(model, metrics, X_train, y_train, X_test, y_test):
             return run_id
 
     except Exception as e:
-        print(f"⚠️ MLflow non disponible ({e}). Modèle sauvegardé localement uniquement.")
+        print(
+            f"⚠️ MLflow non disponible ({e}). Modèle sauvegardé localement uniquement."
+        )
         return None
 
 
@@ -147,14 +156,16 @@ def main():
 
     print("📊 Évaluation...")
     metrics, y_pred = evaluate_model(model, X_test, y_test)
-    print(f"   → RMSE: {metrics['rmse']:.4f} | MAE: {metrics['mae']:.4f} | R²: {metrics['r2']:.4f}")
+    print(
+        f"   → RMSE: {metrics['rmse']:.4f} | MAE: {metrics['mae']:.4f} | R²: {metrics['r2']:.4f}"
+    )
 
     print("💾 Sauvegarde des artefacts...")
     model_path = save_artifacts(model, metrics, X_train)
     print(f"   → Modèle: {model_path}")
 
     print("📝 Log MLflow...")
-    run_id = run_mlflow_experiment(model, metrics, X_train, y_train, X_test, y_test)
+    _ = mlflow.start_run(...).info.run_id
 
     print("✅ Entraînement terminé avec succès !")
     return model, metrics

@@ -32,7 +32,9 @@ class DataValidator:
             if col in self.df.columns:
                 actual = str(self.df[col].dtype)
                 if expected_type not in actual:
-                    self.errors.append(f"Type incorrect pour {col}: {actual} (attendu: {expected_type})")
+                    self.errors.append(
+                        f"Type incorrect pour {col}: {actual} (attendu: {expected_type})"
+                    )
         return len(self.errors) == 0
 
     def validate_no_nulls(self, columns: list[str]) -> bool:
@@ -52,13 +54,20 @@ class DataValidator:
     def run_all(self) -> dict:
         """Exécute toutes les validations."""
         # Validation du dataset brut
-        self.validate_schema([
-            "Global_active_power", "Global_reactive_power", "Voltage",
-            "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3"
-        ])
-        
+        self.validate_schema(
+            [
+                "Global_active_power",
+                "Global_reactive_power",
+                "Voltage",
+                "Global_intensity",
+                "Sub_metering_1",
+                "Sub_metering_2",
+                "Sub_metering_3",
+            ]
+        )
+
         self.validate_no_nulls(["Global_active_power", "Voltage"])
-        
+
         self.validate_range("Global_active_power", 0, 20)
         self.validate_range("Voltage", 200, 260)
 
@@ -72,17 +81,17 @@ class DataValidator:
 def main():
     """Point d'entrée pour validation."""
     logging.basicConfig(level=logging.INFO)
-    
+
     df = pd.read_parquet("data/processed/cleaned_data.parquet")
     validator = DataValidator(df)
     results = validator.run_all()
-    
+
     # Sauvegarde
     output_path = Path("metrics/validation_results.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
-    
+
     logger.info(f"Validation: {'✅ PASS' if results['valid'] else '❌ FAIL'}")
     if results["errors"]:
         for err in results["errors"]:

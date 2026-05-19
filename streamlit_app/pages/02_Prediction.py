@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import requests
 import streamlit as st
-
 from utils.api_client import health_check, predict
 
 st.set_page_config(page_title="Prediction", page_icon="🔮")
@@ -47,7 +46,9 @@ if st.button("Prédire", type="primary"):
         try:
             result = predict(features)
             st.success(f"Prédiction : **{result['prediction']:.4f} kW**")
-            st.write(f"Unité : {result.get('unit', 'kW')} | Horizon : {result.get('horizon', '1h')}")
+            st.write(
+                f"Unité : {result.get('unit', 'kW')} | Horizon : {result.get('horizon', '1h')}"
+            )
         except Exception as e:
             st.error(f"Erreur : {e}")
 
@@ -61,8 +62,13 @@ if uploaded:
     st.dataframe(df_up.head())
 
     required = [
-        "Global_active_power", "Global_reactive_power", "Voltage",
-        "Global_intensity", "Sub_metering_1", "Sub_metering_2", "Sub_metering_3",
+        "Global_active_power",
+        "Global_reactive_power",
+        "Voltage",
+        "Global_intensity",
+        "Sub_metering_1",
+        "Sub_metering_2",
+        "Sub_metering_3",
     ]
     missing = [c for c in required if c not in df_up.columns]
     if missing:
@@ -82,6 +88,8 @@ if uploaded:
                 st.success(f"{len(preds)} prédictions effectuées")
                 st.dataframe(df_up)
                 csv = df_up.to_csv(index=False).encode("utf-8")
-                st.download_button("Télécharger CSV", csv, "predictions.csv", "text/csv")
+                st.download_button(
+                    "Télécharger CSV", csv, "predictions.csv", "text/csv"
+                )
             except Exception as e:
                 st.error(f"Erreur batch : {e}")

@@ -1,6 +1,7 @@
 """
 Module d'évaluation du modèle entraîné.
 """
+
 import json
 import os
 import pickle
@@ -63,7 +64,9 @@ def evaluate():
     with open(METRICS_DIR / "test_metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
 
-    print(f"✅ Évaluation terminée : RMSE={metrics['rmse']:.4f}, MAE={metrics['mae']:.4f}, R²={metrics['r2']:.4f}")
+    print(
+        f"✅ Évaluation terminée : RMSE={metrics['rmse']:.4f}, MAE={metrics['mae']:.4f}, R²={metrics['r2']:.4f}"
+    )
     return metrics
 
 

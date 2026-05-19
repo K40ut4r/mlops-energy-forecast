@@ -16,7 +16,10 @@ tab1, tab2, tab3 = st.tabs(["Metriques Modele", "Sante Services", "Drift Detecti
 with tab1:
     st.subheader("Metriques de performance")
 
-    for label, path in [("Test", "metrics/test_metrics.json"), ("Train", "metrics/train_metrics.json")]:
+    for label, path in [
+        ("Test", "metrics/test_metrics.json"),
+        ("Train", "metrics/train_metrics.json"),
+    ]:
         if os.path.exists(path):
             with open(path) as f:
                 metrics = json.load(f)
@@ -34,7 +37,9 @@ with tab1:
     st.subheader("Logs Airflow recents")
     log_dir = "airflow/logs/dag_id=energy_forecast_pipeline"
     if os.path.exists(log_dir):
-        logs = sorted(glob.glob(f"{log_dir}/**/*.log", recursive=True), reverse=True)[:3]
+        logs = sorted(glob.glob(f"{log_dir}/**/*.log", recursive=True), reverse=True)[
+            :3
+        ]
         for log in logs:
             with st.expander(os.path.basename(log)):
                 with open(log, "r", encoding="utf-8", errors="ignore") as f:
@@ -68,7 +73,9 @@ with tab3:
     drift_path = "monitoring/drift_report.json"
 
     if not os.path.exists(drift_path):
-        st.info("Aucun rapport de drift trouve. Executez : `python src/monitoring/drift_detection.py`")
+        st.info(
+            "Aucun rapport de drift trouve. Executez : `python src/monitoring/drift_detection.py`"
+        )
         st.stop()
 
     with open(drift_path) as f:
@@ -94,21 +101,25 @@ with tab3:
 
     features_data = []
     for feat_name, feat_data in report["features"].items():
-        features_data.append({
-            "Feature": feat_name,
-            "Drift": "🔴 OUI" if feat_data["drift_detected"] else "🟢 Non",
-            "Type": feat_data["drift_type"],
-            "PSI": round(feat_data["psi"], 4),
-            "KS p-value": round(feat_data["ks_p_value"], 4),
-            "Train mean": round(feat_data["train_mean"], 4),
-            "Test mean": round(feat_data["test_mean"], 4),
-            "Diff %": round(feat_data["mean_diff_pct"], 2),
-        })
+        features_data.append(
+            {
+                "Feature": feat_name,
+                "Drift": "🔴 OUI" if feat_data["drift_detected"] else "🟢 Non",
+                "Type": feat_data["drift_type"],
+                "PSI": round(feat_data["psi"], 4),
+                "KS p-value": round(feat_data["ks_p_value"], 4),
+                "Train mean": round(feat_data["train_mean"], 4),
+                "Test mean": round(feat_data["test_mean"], 4),
+                "Diff %": round(feat_data["mean_diff_pct"], 2),
+            }
+        )
 
     df_features = pd.DataFrame(features_data)
 
     # Filtre
-    show_only_drift = st.toggle("Afficher uniquement les features avec drift", value=False)
+    show_only_drift = st.toggle(
+        "Afficher uniquement les features avec drift", value=False
+    )
     if show_only_drift:
         df_features = df_features[df_features["Drift"].str.contains("OUI")]
 

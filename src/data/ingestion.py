@@ -3,20 +3,23 @@ Module d'ingestion des données brutes du dataset UCI Household Power Consumptio
 """
 
 import logging
-import os
 from pathlib import Path
 
 import pandas as pd
 
 # Configuration du logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 class DataIngestion:
     """Classe responsable du chargement des données brutes."""
 
-    def __init__(self, raw_data_path: str | Path, output_dir: str | Path = "data/processed") -> None:
+    def __init__(
+        self, raw_data_path: str | Path, output_dir: str | Path = "data/processed"
+    ) -> None:
         """
         Initialise l'ingestion.
 
@@ -107,7 +110,9 @@ class DataIngestion:
         # Conversion en float32 pour économiser la RAM (crucial sur 16Go)
         df[numeric_cols] = df[numeric_cols].astype("float32")
 
-        logger.info(f"Types convertis. Mémoire utilisée : {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
+        logger.info(
+            f"Types convertis. Mémoire utilisée : {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB"
+        )
         return df
 
     def run(self) -> pd.DataFrame:

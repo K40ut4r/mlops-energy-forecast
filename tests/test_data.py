@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 from src.data.clean import (
-    convert_types,
     create_derived_columns,
     handle_missing_values,
     validate_data,
@@ -19,7 +18,18 @@ def test_handle_missing_values_interpolation():
     df = pd.DataFrame(
         {
             "datetime": pd.date_range("2007-01-01", periods=10, freq="h"),
-            "Global_active_power": [1.0, np.nan, np.nan, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+            "Global_active_power": [
+                1.0,
+                np.nan,
+                np.nan,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0,
+            ],
         }
     )
     df.set_index("datetime", inplace=True)

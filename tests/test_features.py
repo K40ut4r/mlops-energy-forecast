@@ -36,9 +36,7 @@ def sample_data(tmp_path):
 
 def test_lags_use_only_past(sample_data, tmp_path):
     """Lag_1h à l'index i doit être égal à Global_active_power à i-1."""
-    builder = FeatureBuilder(
-        input_path=sample_data, output_dir=tmp_path / "featured"
-    )
+    builder = FeatureBuilder(input_path=sample_data, output_dir=tmp_path / "featured")
     df = builder.load_data()
     df = builder.create_lag_features(df, lags=[1])
 
@@ -52,9 +50,7 @@ def test_lags_use_only_past(sample_data, tmp_path):
 
 def test_rolling_uses_only_past(sample_data, tmp_path):
     """Rolling mean ne doit pas utiliser de données futures."""
-    builder = FeatureBuilder(
-        input_path=sample_data, output_dir=tmp_path / "featured"
-    )
+    builder = FeatureBuilder(input_path=sample_data, output_dir=tmp_path / "featured")
     df = builder.load_data()
     df = builder.create_rolling_features(df, windows=[3])
 
@@ -66,9 +62,7 @@ def test_rolling_uses_only_past(sample_data, tmp_path):
 
 def test_risky_columns_removed(sample_data, tmp_path):
     """Sub_metering_total et Unmeasured_consumption doivent être supprimés."""
-    builder = FeatureBuilder(
-        input_path=sample_data, output_dir=tmp_path / "featured"
-    )
+    builder = FeatureBuilder(input_path=sample_data, output_dir=tmp_path / "featured")
     df = builder.load_data()
     df = builder.remove_leakage_risk_features(df)
 
@@ -78,9 +72,7 @@ def test_risky_columns_removed(sample_data, tmp_path):
 
 def test_target_is_future(sample_data, tmp_path):
     """La cible doit être la valeur future (shift -1)."""
-    builder = FeatureBuilder(
-        input_path=sample_data, output_dir=tmp_path / "featured"
-    )
+    builder = FeatureBuilder(input_path=sample_data, output_dir=tmp_path / "featured")
     df = builder.load_data()
     df = builder.prepare_target(df, forecast_horizon=1)
 

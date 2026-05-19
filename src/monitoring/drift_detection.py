@@ -2,6 +2,7 @@
 Module de detection de drift entre les donnees d'entrainement et de test.
 Utilise le test de Kolmogorov-Smirnov (KS) et le Population Stability Index (PSI).
 """
+
 import json
 import os
 from pathlib import Path
@@ -23,6 +24,7 @@ def calculate_psi(expected, actual, buckets=10):
     0.1 <= PSI < 0.25 : drift leger
     PSI >= 0.25 : drift significatif
     """
+
     def scale_range(input_arr, min_val, max_val):
         return (input_arr - min_val) / (max_val - min_val + 1e-10)
 
@@ -33,14 +35,21 @@ def calculate_psi(expected, actual, buckets=10):
     expected_counts, _ = np.histogram(expected_scaled, breakpoints)
     actual_counts, _ = np.histogram(actual_scaled, breakpoints)
 
-    expected_percents = np.where(expected_counts == 0, 0.0001, expected_counts) / len(expected)
+    expected_percents = np.where(expected_counts == 0, 0.0001, expected_counts) / len(
+        expected
+    )
     actual_percents = np.where(actual_counts == 0, 0.0001, actual_counts) / len(actual)
 
-    psi = np.sum((actual_percents - expected_percents) * np.log(actual_percents / expected_percents))
+    psi = np.sum(
+        (actual_percents - expected_percents)
+        * np.log(actual_percents / expected_percents)
+    )
     return float(psi)
 
 
-def detect_drift(train_df, test_df, numeric_cols=None, threshold_ks=0.05, threshold_psi=0.25):
+def detect_drift(
+    train_df, test_df, numeric_cols=None, threshold_ks=0.05, threshold_psi=0.25
+):
     """Detecte le drift feature par feature."""
     if numeric_cols is None:
         numeric_cols = train_df.select_dtypes(include=[np.number]).columns.tolist()
@@ -80,10 +89,16 @@ def detect_drift(train_df, test_df, numeric_cols=None, threshold_ks=0.05, thresh
             "ks_p_value": float(p_value),
             "psi": float(psi),
             "drift_detected": is_drifted,
-            "drift_type": "significant" if psi_drift else ("moderate" if ks_drift else "none"),
+            "drift_type": (
+                "significant" if psi_drift else ("moderate" if ks_drift else "none")
+            ),
             "train_mean": float(train_vals.mean()),
             "test_mean": float(test_vals.mean()),
-            "mean_diff_pct": float(abs(train_vals.mean() - test_vals.mean()) / (train_vals.mean() + 1e-10) * 100),
+            "mean_diff_pct": float(
+                abs(train_vals.mean() - test_vals.mean())
+                / (train_vals.mean() + 1e-10)
+                * 100
+            ),
         }
 
         if is_drifted:
@@ -108,9 +123,12 @@ def main():
     print(f"   -> {len(df):,} lignes, {len(df.columns)} colonnes")
 
     from sklearn.model_selection import train_test_split
+
     X = df.drop(columns=["Global_active_power"])
     y = df["Global_active_power"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
     print(f"   -> Train: {len(X_train):,} | Test: {len(X_test):,}")
 

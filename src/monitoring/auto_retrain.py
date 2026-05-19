@@ -2,6 +2,7 @@
 Script de reentrainement automatique declenche quand le drift depasse un seuil.
 A integrer dans un DAG Airflow ou executer via cron.
 """
+
 import json
 import os
 import subprocess
@@ -26,7 +27,7 @@ API_URL = os.environ.get("API_URL", "http://api:8000")
 def load_drift_report():
     """Charge le rapport de drift."""
     if not DRIFT_REPORT.exists():
-        print(f"Rapport de drift non trouve : {DRIFT_REPORT}")
+        print("Rapport de drift non trouve ")
         return None
     with open(DRIFT_REPORT, "r") as f:
         return json.load(f)
@@ -44,7 +45,9 @@ def check_drift(report):
         return True, f"{len(drifted)} features avec drift > {MAX_DRIFTED_FEATURES}"
 
     # Critere 2 : PSI moyen eleve
-    avg_psi = sum(v["psi"] for v in report["features"].values()) / len(report["features"])
+    avg_psi = sum(v["psi"] for v in report["features"].values()) / len(
+        report["features"]
+    )
     if avg_psi > 0.1:
         return True, f"PSI moyen eleve : {avg_psi:.4f}"
 

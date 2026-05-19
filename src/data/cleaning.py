@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class DataCleaning:
     """Classe responsable du nettoyage des données."""
 
-    def __init__(self, input_path: str | Path, output_dir: str | Path = "data/processed") -> None:
+    def __init__(
+        self, input_path: str | Path, output_dir: str | Path = "data/processed"
+    ) -> None:
         """
         Initialise le nettoyage.
 
@@ -43,16 +45,22 @@ class DataCleaning:
         missing = df.isnull().sum()
         missing_pct = (missing / len(df)) * 100
 
-        report = pd.DataFrame({
-            "missing_count": missing,
-            "missing_pct": missing_pct,
-        })
-        report = report[report["missing_count"] > 0].sort_values("missing_pct", ascending=False)
+        report = pd.DataFrame(
+            {
+                "missing_count": missing,
+                "missing_pct": missing_pct,
+            }
+        )
+        report = report[report["missing_count"] > 0].sort_values(
+            "missing_pct", ascending=False
+        )
 
         logger.info(f"Valeurs manquantes détectées :\n{report}")
         return report
 
-    def handle_missing_values(self, df: pd.DataFrame, method: str = "interpolate") -> pd.DataFrame:
+    def handle_missing_values(
+        self, df: pd.DataFrame, method: str = "interpolate"
+    ) -> pd.DataFrame:
         """
         Gère les valeurs manquantes selon la méthode choisie.
 
@@ -163,7 +171,9 @@ class DataCleaning:
         logger.info("Features dérivées ajoutées")
         return df
 
-    def run(self, missing_method: str = "interpolate", outlier_method: str = "none") -> pd.DataFrame:
+    def run(
+        self, missing_method: str = "interpolate", outlier_method: str = "none"
+    ) -> pd.DataFrame:
         """
         Pipeline complet de nettoyage.
 
@@ -203,5 +213,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     main()

@@ -2,6 +2,7 @@
 Module de feature engineering avance pour la prediction de consommation electrique.
 Ajoute des lags, moyennes mobiles, et features temporelles.
 """
+
 import os
 from pathlib import Path
 
@@ -42,12 +43,17 @@ def add_lag_features(df, target_col="Global_active_power", lags=[1, 2, 3, 6, 12,
     return df
 
 
-def add_rolling_features(df, target_col="Global_active_power", windows=[3, 6, 12, 24, 168]):
+def add_rolling_features(
+    df, target_col="Global_active_power", windows=[3, 6, 12, 24, 168]
+):
     """Ajoute des moyennes mobiles et ecarts-types glissants."""
     df = df.copy()
     for window in windows:
         df[f"{target_col}_rolling_mean_{window}h"] = (
-            df[target_col].rolling(window=window, min_periods=1).mean().astype("float32")
+            df[target_col]
+            .rolling(window=window, min_periods=1)
+            .mean()
+            .astype("float32")
         )
         df[f"{target_col}_rolling_std_{window}h"] = (
             df[target_col].rolling(window=window, min_periods=1).std().astype("float32")
