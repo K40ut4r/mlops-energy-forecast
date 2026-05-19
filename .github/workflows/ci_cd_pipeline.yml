@@ -158,3 +158,5 @@ jobs:
         with:
           name: trained-model-${{ github.run_id }}
           path: models/model.pkl
+      - name: Format with Black (auto)
+        run: black src/ tests/ streamlit_app/ --extend-exclude "src/monitoring/"
