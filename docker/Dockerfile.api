@@ -2,13 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copier les dépendances LÉGÈRES (pas requirements.txt complet)
-COPY docker/requirements-api.txt .
-RUN pip install --no-cache-dir -r requirements-api.txt
+# Dépendances système pour compiler XGBoost
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copier le projet
+# Installer les dépendances Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le code source
 COPY src/ ./src/
-COPY configs/ ./configs/
+
+# Copier les modèles (le dossier models/ doit exister dans le repo, même vide avec .gitkeep)
 COPY models/ ./models/
 
 # Variables d'environnement
