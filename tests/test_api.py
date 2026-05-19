@@ -3,13 +3,10 @@ Tests API avec modèle factice (mock).
 Ne nécessite pas d'entraînement ni de dataset.
 """
 
-import pickle
-from pathlib import Path
-from unittest.mock import MagicMock
-
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+from unittest.mock import MagicMock
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -32,7 +29,6 @@ def setup_model():
 @pytest.fixture
 def client():
     from src.api.main import app
-
     return TestClient(app)
 
 
@@ -78,7 +74,6 @@ def test_predict_missing_features(client):
 
 def test_predict_batch(client):
     from src.api import main
-
     main.model.predict = MagicMock(return_value=np.array([1.234, 1.234]))
 
     payload = {
@@ -87,7 +82,7 @@ def test_predict_batch(client):
             {"hour_sin": -0.5, "lag_1h": 0.8},
         ]
     }
-    response = client.post("/predict_batch", json=payload)
+    response = client.post("/predict/batch", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert len(data["predictions"]) == 2
@@ -97,7 +92,6 @@ def test_predict_batch(client):
 def test_predict_no_model(client):
     """L'API renvoie 503 si le modèle n'est pas chargé."""
     from src.api import main
-
     original = main.model
     main.model = None
     try:
