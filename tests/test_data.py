@@ -6,11 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.data.clean import (
-    create_derived_columns,
-    handle_missing_values,
-    validate_data,
-)
+from src.data.clean import create_derived_columns, handle_missing_values, validate_data
 
 
 def test_handle_missing_values_interpolation():
