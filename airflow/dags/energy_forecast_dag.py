@@ -3,9 +3,72 @@ DAG Airflow pour le pipeline MLOps Energy Forecast.
 Orchestre : ingestion → cleaning → features → train → evaluate
 """
 
+import os
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+# Racine du projet montée dans le conteneur
+PROJECT_DIR = "/opt/airflow/project"
+
+
+def _add_project_to_path():
+    """Ajoute le dossier projet au PYTHONPATH pour les imports."""
+    project_path = str(Path(PROJECT_DIR))
+    if project_path not in sys.path:
+        sys.path.insert(0, project_path)
+
+
+def run_ingestion():
+    _add_project_to_path()
+    from src.data.ingestion import DataIngestion
+
+    ingestion = DataIngestion(
+        raw_data_path=os.path.join(PROJECT_DIR, "data", "raw", "household_power_consumption.txt"),
+        output_dir=os.path.join(PROJECT_DIR, "data", "processed"),
+    )
+    ingestion.run()
+    return "Ingestion terminée"
+
+
+def run_cleaning():
+    _add_project_to_path()
+    from src.data.cleaning import DataCleaning
+
+    cleaner = DataCleaning(
+        input_path=os.path.join(PROJECT_DIR, "data", "processed", "raw_loaded.parquet"),
+        output_dir=os.path.join(PROJECT_DIR, "data", "processed"),
+    )
+    cleaner.run()
+    return "Cleaning terminé"
+
+
+def run_features():
+    _add_project_to_path()
+    from src.features.build_features import build_features
+
+    build_features(
+        input_path=os.path.join(PROJECT_DIR, "data", "processed", "cleaned_data.parquet"),
+        output_path=os.path.join(PROJECT_DIR, "data", "featured", "featured_data.parquet"),  # ✅ correct arg name + full filename
+    )
+    return "Features terminées"
+
+
+def run_training():
+    _add_project_to_path()
+    from src.models.train import main as train_model
+    train_model()
+    return "Entraînement terminé"
+
+
+def run_evaluation():
+    _add_project_to_path()
+    from src.models.evaluate import main as evaluate_model
+    evaluate_model()
+    return "Évaluation terminée"
 
 
 default_args = {
@@ -16,64 +79,6 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
-
-
-def run_ingestion():
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path("/opt/airflow/project")))
-    from src.data.ingestion import DataIngestion
-    ingestion = DataIngestion(
-        raw_data_path="data/raw/household_power_consumption.txt",
-        output_dir="data/processed",
-    )
-    ingestion.run()
-    return "Ingestion terminée"
-
-
-def run_cleaning():
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path("/opt/airflow/project")))
-    from src.data.cleaning import DataCleaning
-    cleaner = DataCleaning(
-        input_path="data/processed/raw_loaded.parquet",
-        output_dir="data/processed",
-    )
-    cleaner.run()
-    return "Cleaning terminé"
-
-
-def run_features():
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path("/opt/airflow/project")))
-    from src.features.build_features import FeatureBuilder
-    builder = FeatureBuilder(
-        input_path="data/processed/cleaned_data.parquet",
-        output_dir="data/featured",
-    )
-    builder.run(resample=True, forecast_horizon=1)
-    return "Features terminées"
-
-
-def run_training():
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path("/opt/airflow/project")))
-    from src.models.train import main as train_model
-    train_model()
-    return "Entraînement terminé"
-
-
-def run_evaluation():
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path("/opt/airflow/project")))
-    from src.models.evaluate import main as evaluate_model
-    evaluate_model()
-    return "Évaluation terminée"
-
 
 with DAG(
     "energy_forecast_pipeline",

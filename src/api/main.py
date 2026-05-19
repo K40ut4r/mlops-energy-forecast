@@ -2,11 +2,11 @@
 API FastAPI pour servir le modèle de prédiction de consommation électrique.
 """
 
-import json
+import os
 import pickle
 from pathlib import Path
+from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -17,19 +17,26 @@ app = FastAPI(
     version="1.0.0",
 )
 
-
+# ─────────────────────────────────────────
 # Chargement du modèle au démarrage
-MODEL_PATH = Path("models/model.pkl")
+# ─────────────────────────────────────────
+MODEL_PATH = Path(os.environ.get("MODEL_PATH", "models/model.pkl"))
 model = None
 
 if MODEL_PATH.exists():
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
+    print(f"✅ Modèle chargé depuis {MODEL_PATH}")
+else:
+    print(f"⚠️ Modèle non trouvé à {MODEL_PATH}. L'API tourne mais /predict renverra une erreur.")
 
 
+# ─────────────────────────────────────────
+# Schémas Pydantic
+# ─────────────────────────────────────────
 class PredictionRequest(BaseModel):
     """Requête de prédiction."""
-    features: dict  # Dict des features {nom_feature: valeur}
+    features: Dict[str, float]  # ex: {"Global_active_power": 2.5, "Voltage": 240.0, ...}
 
 
 class PredictionResponse(BaseModel):
@@ -39,6 +46,14 @@ class PredictionResponse(BaseModel):
     horizon: str = "1h"
 
 
+class BatchPredictionRequest(BaseModel):
+    """Requête de prédiction en batch."""
+    items: List[Dict[str, float]]
+
+
+# ─────────────────────────────────────────
+# Endpoints
+# ─────────────────────────────────────────
 @app.get("/")
 def root():
     """Health check."""
@@ -64,18 +79,17 @@ def predict(request: PredictionRequest):
     try:
         # Convertir en DataFrame (1 ligne)
         df = pd.DataFrame([request.features])
-        
-        # Vérifier que toutes les features attendues sont présentes
-        expected_features = model.feature_names_in_ if hasattr(model, "feature_names_in_") else df.columns
-        
-        # Réordonner selon le modèle
-        df = df.reindex(columns=expected_features, fill_value=0)
-        
+
+        # Réordonner selon les features attendues par le modèle
+        if hasattr(model, "feature_names_in_"):
+            expected_features = list(model.feature_names_in_)
+            df = df.reindex(columns=expected_features, fill_value=0)
+
         # Prédiction
-        prediction = model.predict(df.values)[0]
-        
+        prediction = float(model.predict(df.values)[0])
+
         return PredictionResponse(
-            prediction=float(prediction),
+            prediction=prediction,
             unit="kW",
             horizon="1h",
         )
@@ -83,19 +97,28 @@ def predict(request: PredictionRequest):
         raise HTTPException(status_code=400, detail=f"Erreur de prédiction: {str(e)}")
 
 
-@app.post("/predict/batch")
-def predict_batch(requests: list[PredictionRequest]):
+@app.post("/predict_batch")
+def predict_batch(request: BatchPredictionRequest):
     """Prédiction en batch."""
     if model is None:
         raise HTTPException(status_code=503, detail="Modèle non chargé")
 
-    predictions = []
-    for req in requests:
-        df = pd.DataFrame([req.features])
-        pred = model.predict(df.values)[0]
-        predictions.append(float(pred))
-    
-    return {"predictions": predictions, "unit": "kW", "horizon": "1h"}
+    try:
+        df = pd.DataFrame(request.items)
+
+        if hasattr(model, "feature_names_in_"):
+            expected_features = list(model.feature_names_in_)
+            df = df.reindex(columns=expected_features, fill_value=0)
+
+        predictions = model.predict(df.values).tolist()
+        return {
+            "predictions": [float(p) for p in predictions],
+            "unit": "kW",
+            "horizon": "1h",
+            "count": len(predictions),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur de prédiction batch: {str(e)}")
 
 
 if __name__ == "__main__":

@@ -1,17 +1,260 @@
 {
   "dashboard": {
-    "title": "Energy Forecast Monitoring",
+    "id": null,
+    "title": "Energy Forecast - MLOps Dashboard",
+    "tags": [
+      "mlops",
+      "energy",
+      "forecasting"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "refresh": "30s",
     "panels": [
       {
-        "title": "API Latency",
-        "type": "graph",
-        "targets": [{"expr": "api_request_duration_seconds"}]
+        "id": 1,
+        "title": "API Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"fastapi\"}",
+            "legendFormat": "FastAPI"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "orientation": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  }
+                },
+                "type": "value"
+              },
+              {
+                "options": {
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          }
+        }
       },
       {
-        "title": "Prediction Count",
-        "type": "singlestat",
-        "targets": [{"expr": "predictions_total"}]
+        "id": 2,
+        "title": "Pr\u00e9diction Latency (ms)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(prediction_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "p95"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 6,
+          "y": 0
+        },
+        "yAxes": [
+          {
+            "label": "ms"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "RMSE",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "model_rmse",
+            "legendFormat": "RMSE"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.05
+                },
+                {
+                  "color": "red",
+                  "value": 0.1
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "R\u00b2 Score",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "model_r2",
+            "legendFormat": "R\u00b2"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 4
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.8
+                },
+                {
+                  "color": "green",
+                  "value": 0.95
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Drift Score par Feature",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "drift_psi",
+            "legendFormat": "{{feature}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.1
+                },
+                {
+                  "color": "red",
+                  "value": 0.25
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Nombre de Pr\u00e9dictions / min",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(predictions_total[1m])",
+            "legendFormat": "pr\u00e9dictions/min"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Distribution des Pr\u00e9dictions",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "prediction_value_bucket",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        },
+        "options": {
+          "calculate": false,
+          "yAxis": {
+            "unit": "kwatt"
+          }
+        }
       }
-    ]
-  }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true
 }
