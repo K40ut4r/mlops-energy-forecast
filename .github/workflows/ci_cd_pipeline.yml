@@ -49,13 +49,13 @@ jobs:
           mkdir -p models
           python -c "
           import pickle
-          class DummyModel:
-              def __init__(self):
-                  self.feature_names_in_ = ['hour_sin','hour_cos','lag_1h','lag_24h']
-              def predict(self, X):
-                  return [1.5] * len(X)
+          import numpy as np
+          from sklearn.dummy import DummyRegressor
+          model = DummyRegressor(strategy='constant', constant=1.5)
+          model.fit(np.zeros((1, 4)), np.zeros(1))
+          model.feature_names_in_ = ['hour_sin','hour_cos','lag_1h','lag_24h']
           with open('models/model.pkl', 'wb') as f:
-              pickle.dump({'model': DummyModel(), 'feature_names': ['hour_sin','hour_cos','lag_1h','lag_24h']}, f)
+              pickle.dump(model, f)
           "
 
       - name: Build API Docker image
