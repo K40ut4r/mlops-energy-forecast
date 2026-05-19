@@ -42,7 +42,7 @@ def check_drift(report):
 
     # Critere 1 : nombre de features driftees
     if len(drifted) > MAX_DRIFTED_FEATURES:
-        return True, f"{len(drifted)} features avec drift > {MAX_DRIFTED_FEATURES}"
+        return True, len(drifted)+ " features avec drift "+MAX_DRIFTED_FEATURES
 
     # Critere 2 : PSI moyen eleve
     avg_psi = sum(v["psi"] for v in report["features"].values()) / len(
@@ -97,22 +97,22 @@ def retrain_locally():
                 text=True,
             )
             if result.returncode != 0:
-                print(f"  ERREUR : {result.stderr}")
+                print("  ERREUR : "+ result.stderr)
                 return False
-            print(f"  OK")
+            print("  OK")
         else:
-            print(f"  Script non trouve : {path}")
+            print("  Script non trouve : "+ path)
     return True
 
 
 def reload_api_model():
     """Notifie l'API de recharger le modele (si endpoint disponible)."""
     try:
-        resp = requests.post(f"{API_URL}/reload", timeout=5)
+        resp = requests.post(API_URL+"/reload", timeout=5)
         if resp.status_code == 200:
             print("Modele API recharge")
         else:
-            print(f"Rechargement API non disponible (HTTP {resp.status_code})")
+            print("Rechargement API non disponible (HTTP )"+resp.status_code)
     except Exception:
         print("API non accessible pour rechargement")
 
@@ -130,13 +130,13 @@ def main():
     # 2. Verifier si reentrainement necessaire
     print("[2/4] Analyse du drift...")
     needs_retrain, reason = check_drift(report)
-    print(f"Resultat : {reason}")
+    print("Resultat :"+reason)
 
     if not needs_retrain:
         print("✅ Aucun reentrainement necessaire.")
         return 0
 
-    print(f"⚠️REENTRAINEMENT NECESSAIRE : {reason}")
+    print("⚠️REENTRAINEMENT NECESSAIRE :"+reason)
 
     # 3. Declencher le reentrainement
     print("[3/4] Declenchement du reentrainement...")
