@@ -44,6 +44,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies for dummy model
+        run: pip install numpy scikit-learn
+
       - name: Create dummy model for Docker build
         run: |
           mkdir -p models
